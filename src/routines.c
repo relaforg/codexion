@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 10:34:27 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/09 09:37:51 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/09 17:14:48 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,34 +14,99 @@
 #include <pthread.h>
 #include <stdio.h>
 
-void	*coder_routine(void *ctx)
+long long	now(void)
 {
-	int				id;
-	t_config		*config;
-	t_dongle_pool	*pool;
-	t_log_queue		*logs;
+	struct timeval	tv;
 
-	id = ((t_thread_context *) ctx)->id;
-	config = ((t_thread_context *) ctx)->config;
-	pool = ((t_thread_context *) ctx)->pool;
-	logs = ((t_thread_context *) ctx)->logs;
-	printf("id: %d\n", id);
-	printf("config: %p\n", config);
-	printf("pool: %p\n", pool);
-	printf("logs: %p\n", logs);
-	return (0);
+	gettimeofday(&tv, NULL);
+	return ((tv.tv_sec * 1000000L + tv.tv_usec) / 1000);
 }
 
-void	*monitor_routine(void *ctx)
+void	send_log(int id, t_message_type type, t_log_queue *logs)
 {
-	t_log_queue		*logs;
+	pthread_mutex_lock(&logs->mutex);
+	logs->count++;
+	logs->entries[logs->tail].coder_id = id;
+	logs->entries[logs->tail].message = type;
+	logs->entries[logs->tail].timestamp = now();
+	logs->tail = (logs->tail + 1) % 1024;
+	pthread_cond_broadcast(&logs->cond);
+	pthread_mutex_unlock(&logs->mutex);
+}
 
-	logs = (t_log_queue*) ctx;
-	printf("Monitor:\n");
-	printf("logs: %p\n", logs);
-	// while (pthread_cond_wait() != 0)
-	// {
-	// 	continue;
-	// }
-	return (0);
+void	*coder_routine(void *context)
+{
+	t_thread_context	*ctx;
+	int					nbr_compilation;
+	long long			last_compile;
+	int					*dongles;
+
+	ctx = (t_thread_context *) context;
+	nbr_compilation = 0;
+	last_compile = 0;
+	while (nbr_compilation < ctx->config->number_of_compilation)
+	{
+		if (now() - ctx->config->start_time - last_compile
+			>= ctx->config->burnout_time)
+		{
+			send_log(ctx->id, BURNOUT, ctx->logs);
+			free(context);
+			return (NULL);
+		}
+		dongles = take_dongles(ctx);
+		if (!dongles)
+			continue ;
+		compile(ctx);
+		free_dongles(ctx, dongles);
+		debug(ctx);
+		refactor(ctx);
+		nbr_compilation++;
+	}
+	send_log(ctx->id, DONE, ctx->logs);
+	free(context);
+	return (NULL);
+}
+
+void	*monitor_routine(void *context)
+{
+	t_thread_context	*ctx;
+	int					count;
+	t_log_entry			msg;
+
+	ctx = (t_thread_context *) context;
+	count = 0;
+	while (count < ctx->config->number_of_coder)
+	{
+		pthread_mutex_lock(&ctx->logs->mutex);
+		while (ctx->logs->count == 0)
+			pthread_cond_wait(&ctx->logs->cond, &ctx->logs->mutex);
+		msg = ctx->logs->entries[ctx->logs->head];
+		ctx->logs->head = (ctx->logs->head + 1) % 1024;
+		ctx->logs->count--;
+		pthread_mutex_unlock(&ctx->logs->mutex);
+		if (msg.message == DONE)
+		{
+			count++;
+			continue;
+		}
+		printf("%lld %d ", msg.timestamp - ctx->config->start_time,
+				msg.coder_id);
+		if (msg.message == DONGLE)
+			printf("has taken a dongle\n");
+		else if (msg.message == COMPILE)
+			printf("is compiling\n");
+		else if (msg.message == DEBUG)
+			printf("is debugging\n");
+		else if (msg.message == REFACTOR)
+			printf("is refactoring\n");
+		else if (msg.message == BURNOUT)
+		{
+			printf("burned out\n");
+			free(context);
+			return (NULL);
+		}
+	}
+	printf("\nAll coders are done !\n");
+	free(context);
+	return (NULL);
 }

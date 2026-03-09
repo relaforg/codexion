@@ -15,12 +15,24 @@ VALGRIND_FLAGS	:= --leak-check=full \
 				   --show-leak-kinds=all \
 				   --track-origins=yes \
 				   --track-fds=yes
+HELGRIND_FLAGS	:= --tool=helgrind
+DRD_FLAGS		:= --tool=drd
 MODE			?= release
+
+RESET			:= \033[0m
+BOLD			:= \033[1m
+GREEN			:= \033[32m
+YELLOW			:= \033[33m
+BLUE			:= \033[34m
+CYAN			:= \033[36m
+MAGENTA			:= \033[35m
+RED				:= \033[31m
 
 VPATH			:= src
 SRCS			:= main.c \
 	   			   dongles.c \
-	   			   routines.c
+	   			   routines.c \
+				   actions.c
 
 RELEASE_OBJS	:= $(SRCS:%.c=$(RELEASE_DIR)/%.o)
 DEBUG_OBJS  	:= $(SRCS:%.c=$(DEBUG_DIR)/%.o)
@@ -40,39 +52,59 @@ endif
 all: $(NAME)
 
 $(NAME): $(RELEASE_OBJS)
-	$(CC) $(CFLAGS_RELEASE) $(RELEASE_OBJS) -o $(NAME)
+	@printf "$(BOLD)$(GREEN)Linking release executable:$(RESET) $(NAME)\n"
+	@$(CC) $(CFLAGS_RELEASE) $(RELEASE_OBJS) -o $(NAME)
 
 $(DEBUG_NAME): $(DEBUG_OBJS)
-	$(CC) $(CFLAGS_DEBUG) $(DEBUG_OBJS) -o $(DEBUG_NAME)
+	@printf "$(BOLD)$(MAGENTA)Linking debug executable:$(RESET) $(DEBUG_NAME)\n"
+	@$(CC) $(CFLAGS_DEBUG) $(DEBUG_OBJS) -o $(DEBUG_NAME)
 
 $(ASAN_NAME): $(ASAN_OBJS)
-	$(CC) $(CFLAGS_ASAN) $(ASAN_OBJS) -o $(ASAN_NAME)
+	@printf "$(BOLD)$(RED)Linking asan executable:$(RESET) $(ASAN_NAME)\n"
+	@$(CC) $(CFLAGS_ASAN) $(ASAN_OBJS) -o $(ASAN_NAME)
 
 $(RELEASE_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS_RELEASE) -c $< -o $@
+	@printf "$(BLUE)Compiling$(RESET) $(YELLOW)%s$(RESET)\n" "$<"
+	@$(CC) $(CFLAGS_RELEASE) -c $< -o $@
 
 $(DEBUG_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS_DEBUG) -c $< -o $@
+	@printf "$(MAGENTA)Compiling debug$(RESET) $(YELLOW)%s$(RESET)\n" "$<"
+	@$(CC) $(CFLAGS_DEBUG) -c $< -o $@
 
 $(ASAN_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS_ASAN) -c $< -o $@
+	@printf "$(RED)Compiling asan$(RESET) $(YELLOW)%s$(RESET)\n" "$<"
+	@$(CC) $(CFLAGS_ASAN) -c $< -o $@
+
+run: $(NAME)
+	@echo
+	./$(NAME)
 
 debug: $(DEBUG_NAME)
 
 leak: $(DEBUG_NAME)
+	@echo
 	valgrind $(VALGRIND_FLAGS) ./$(DEBUG_NAME) $(ARGS)
 
+helgrind: $(DEBUG_NAME)
+	@echo
+	valgrind $(HELGRIND_FLAGS) ./$(DEBUG_NAME) $(ARGS)
+
+drd: $(DEBUG_NAME)
+	@echo
+	valgrind $(DRD_FLAGS) ./$(DEBUG_NAME) $(ARGS)
+
 sanitize: $(ASAN_NAME)
+	@echo
 	./$(ASAN_NAME) $(ARGS)
 
 clean:
 	rm -rf $(BUILD_DIR)
 
 fclean: clean
-	rm -f $(NAME)
+	rm -f $(NAME) $(DEBUG_NAME) $(ASAN_NAME)
 
 re: fclean all
 
