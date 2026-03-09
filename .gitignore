@@ -1,3 +1,5 @@
 codexion
+codexion_debug
+codexion_asan
 .build
 thinking.md

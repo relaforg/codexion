@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:38:50 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/07 13:53:46 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/09 09:38:51 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,13 +37,14 @@ int	init_dongle_pool(t_dongle_pool *pool, t_config *config)
 	return (0);
 }
 
-int	init_message(t_message *message)
+int	init_logs(t_log_queue *logs)
 {
-	message->coder_id = -1;
-	message->type = NONE;
-	if (pthread_mutex_init(&message->mutex, NULL))
+	logs->head = 0;
+	logs->tail = 0;
+	logs->count = 0;
+	if (pthread_mutex_init(&logs->mutex, NULL))
 		return (1);
-	if (pthread_cond_init(&message->cond, NULL))
+	if (pthread_cond_init(&logs->cond, NULL))
 		return (1);
 	return (0);
 }
@@ -55,10 +56,12 @@ int	main(void)
 	t_dongle_pool	pool;
 	t_thread_context	ctx;
 	int					i;
-	t_message			message;
+	t_log_queue			logs;
 
-	// if (pthread_create(&tid, NULL, monitor_routine, NULL))
-	// 	return (1);
+	if (init_logs(&logs))
+		return (1);
+	if (pthread_create(&tid, NULL, monitor_routine, (void *) &logs))
+		return (1);
 	config.number_of_coder = 4;
 	config.number_of_compilation = 2;
 	config.compilation_time = 100;
@@ -67,13 +70,11 @@ int	main(void)
 	config.burnout_time = 1000;
 	config.cooldown_time = 50;
 	config.scheduler = FIFO;
-	if (init_message(&message))
-		return (1);
 	if (init_dongle_pool(&pool, &config))
 		return (1);
 	ctx.config = &config;
 	ctx.pool = &pool;
-	ctx.message = &message;
+	ctx.logs = &logs;
 	i = 0;
 	while (i < config.number_of_coder)
 	{

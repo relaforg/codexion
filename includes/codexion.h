@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:33:18 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/07 13:53:22 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/09 09:38:09 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,23 +60,32 @@ typedef struct s_dongle_pool
 	pthread_mutex_t	mutex;	
 }	t_dongle_pool;
 
-typedef struct s_message
+typedef struct s_log_entry
 {
-	int	coder_id;
-	t_message_type	type;
-	pthread_mutex_t mutex;
+	int				coder_id;
+	t_message_type	message;
+}	t_log_entry;
+
+typedef struct s_log_queue
+{
+	t_log_entry		entries[1024];
+	int				head;
+	int				tail;
+	int				count;
+	pthread_mutex_t	mutex;
 	pthread_cond_t	cond;
-}	t_message;
+}	t_log_queue;
 
 typedef struct s_thread_context
 {
 	int				id;
 	t_config		*config;
 	t_dongle_pool	*pool;
-	t_message		*message;
+	t_log_queue		*logs;
 }	t_thread_context;
 
 
 void	*coder_routine(void *ctx);
+void	*monitor_routine(void *ctx);
 
 #endif

@@ -7,7 +7,7 @@ RELEASE_DIR		:= $(BUILD_DIR)/release
 DEBUG_DIR		:= $(BUILD_DIR)/debug
 ASAN_DIR		:= $(BUILD_DIR)/asan
 INCLUDES		:= -Iincludes
-CFLAGS_COMMON	:= -Wall -Wextra -Werror -MMD -MP -pthread
+CFLAGS_COMMON	:= -Wall -Wextra -Werror -MMD -MP -pthread $(INCLUDES)
 CFLAGS_RELEASE	:= $(CFLAGS_COMMON)
 CFLAGS_DEBUG	:= $(CFLAGS_COMMON) -g3
 CFLAGS_ASAN		:= $(CFLAGS_COMMON) -g3 -fsanitize=address
