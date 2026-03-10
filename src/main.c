@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:38:50 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 11:36:52 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/10 12:08:57 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,7 @@ int	main(void)
 	config.refactor_time = 300;
 	config.burnout_time = 1000;
 	config.cooldown_time = 10;
-	config.scheduler = FIFO;
+	config.scheduler = EDF;
 	config.start_time = now();
 	ctx = malloc(sizeof(t_thread_context));
 	if (!ctx)
@@ -119,6 +119,7 @@ int	main(void)
 		ctx->config = &config;
 		ctx->pool = &pool;
 		ctx->logs = &logs;
+		ctx->queue = &queue;
 		if (pthread_create(&coders[i], NULL, coder_routine, (void *) ctx))
 		{
 			free(pool.dongles);

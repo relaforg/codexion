@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 10:34:27 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 11:37:03 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/10 12:07:50 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,8 @@ void	send_log(int id, t_message_type type, t_log_queue *logs)
 
 t_bool	ask_dongles(t_thread_context *ctx, long long last_compile)
 {
-	int	i;
+	int		i;
+	t_bool	result;
 
 	i = 0;
 	pthread_mutex_lock(&ctx->queue->mutex);
@@ -53,9 +54,22 @@ t_bool	ask_dongles(t_thread_context *ctx, long long last_compile)
 		ctx->queue->entries[ctx->queue->size].request_time = now();
 		ctx->queue->entries[ctx->queue->size].deadline = last_compile +
 													ctx->config->burnout_time;
+		ctx->queue->size++;
 	}
+	ctx->queue->sort(ctx->queue);
+	if (ctx->queue->entries[ctx->queue->size - 1].coder_id == ctx->id)
+		result = TRUE;
+	else
+		result = FALSE;
 	pthread_mutex_unlock(&ctx->queue->mutex);
-	return (TRUE);
+	return (result);
+}
+
+void	pop_queue_tail(t_scheduler_queue *queue)
+{
+	pthread_mutex_lock(&queue->mutex);
+	queue->size--;
+	pthread_mutex_unlock(&queue->mutex);
 }
 
 void	*coder_routine(void *context)
@@ -77,11 +91,13 @@ void	*coder_routine(void *context)
 			free(context);
 			return (NULL);
 		}
-		if (!ask_dongles(ctx))
+		if (!ask_dongles(ctx, last_compile))
 			continue ;
 		dongles = take_dongles(ctx);
 		if (!dongles)
 			continue ;
+		pop_queue_tail(ctx->queue);
+		last_compile = now() - ctx->config->start_time;
 		compile(ctx);
 		free_dongles(ctx, dongles);
 		debug(ctx);

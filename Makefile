@@ -31,7 +31,8 @@ RED				:= \033[31m
 VPATH			:= src
 SRCS			:= main.c \
 	   			   routines.c \
-				   actions.c
+				   actions.c \
+				   sort.c
 
 RELEASE_OBJS	:= $(SRCS:%.c=$(RELEASE_DIR)/%.o)
 DEBUG_OBJS  	:= $(SRCS:%.c=$(DEBUG_DIR)/%.o)
