@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/09 15:49:16 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/09 17:39:51 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/10 14:42:37 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,40 +15,33 @@
 
 int	*take_dongles(t_thread_context *ctx)
 {
-	int	i;
-	int	count;
 	int	*dongles;
+	int	left;
+	int	right;
 
-	i = 0;
-	count = 0;
+	left = ctx->id % ctx->config->number_of_coder;
+	right = (ctx->id + 1) % ctx->config->number_of_coder;
 	pthread_mutex_lock(&ctx->pool->mutex);
-	while (i < ctx->config->number_of_coder && count < 2)
-	{
-		if (ctx->pool->dongles[i].is_available == TRUE
-			&& now() - ctx->config->start_time - ctx->pool->dongles[i].last_used
-			>= ctx->config->cooldown_time)
-			count++;
-		i++;
-	}
-	if (count < 2)
+	if (!ctx->pool->dongles[left].is_available
+		|| !ctx->pool->dongles[right].is_available
+		|| now() - ctx->config->start_time - ctx->pool->dongles[left].last_used
+		< ctx->config->cooldown_time
+		|| now() - ctx->config->start_time - ctx->pool->dongles[right].last_used
+		< ctx->config->cooldown_time)
 	{
 		pthread_mutex_unlock(&ctx->pool->mutex);
 		return (NULL);
 	}
 	dongles = malloc(sizeof(int) * 2);
 	if (!dongles)
-		return (NULL);
-	count = 0;
-	while (i--)
 	{
-		if (ctx->pool->dongles[i].is_available == TRUE
-			&& now() - ctx->config->start_time - ctx->pool->dongles[i].last_used
-			>= ctx->config->cooldown_time)
-		{
-			ctx->pool->dongles[i].is_available = FALSE;
-			dongles[count++] = i;	
-		}
+		pthread_mutex_unlock(&ctx->pool->mutex);
+		return (NULL);
 	}
+	ctx->pool->dongles[left].is_available = FALSE;
+	ctx->pool->dongles[right].is_available = FALSE;
+	dongles[0] = left;
+	dongles[1] = right;
 	pthread_mutex_unlock(&ctx->pool->mutex);
 	send_log(ctx->id, DONGLE, ctx->logs);
 	send_log(ctx->id, DONGLE, ctx->logs);
