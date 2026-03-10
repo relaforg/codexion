@@ -30,7 +30,6 @@ RED				:= \033[31m
 
 VPATH			:= src
 SRCS			:= main.c \
-	   			   dongles.c \
 	   			   routines.c \
 				   actions.c
 

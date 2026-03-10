@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 10:34:27 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/09 17:14:48 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/10 11:37:03 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,30 @@ void	send_log(int id, t_message_type type, t_log_queue *logs)
 	pthread_mutex_unlock(&logs->mutex);
 }
 
+
+t_bool	ask_dongles(t_thread_context *ctx, long long last_compile)
+{
+	int	i;
+
+	i = 0;
+	pthread_mutex_lock(&ctx->queue->mutex);
+	while (i < ctx->queue->size)
+	{
+		if (ctx->queue->entries[i].coder_id == ctx->id)
+			break;
+		i++;
+	}
+	if (i == ctx->queue->size)
+	{
+		ctx->queue->entries[ctx->queue->size].coder_id = ctx->id;
+		ctx->queue->entries[ctx->queue->size].request_time = now();
+		ctx->queue->entries[ctx->queue->size].deadline = last_compile +
+													ctx->config->burnout_time;
+	}
+	pthread_mutex_unlock(&ctx->queue->mutex);
+	return (TRUE);
+}
+
 void	*coder_routine(void *context)
 {
 	t_thread_context	*ctx;
@@ -53,6 +77,8 @@ void	*coder_routine(void *context)
 			free(context);
 			return (NULL);
 		}
+		if (!ask_dongles(ctx))
+			continue ;
 		dongles = take_dongles(ctx);
 		if (!dongles)
 			continue ;

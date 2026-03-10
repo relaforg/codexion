@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:38:50 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/09 16:04:41 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/10 11:36:52 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,21 @@ int	init_logs(t_log_queue *logs)
 	return (0);
 }
 
+int	init_queue(t_scheduler_queue *queue, t_config *config)
+{
+	queue->size = 0;
+	if (config->scheduler == EDF)
+		queue->sort = EDF_sort;
+	else
+		queue->sort = FIFO_sort;
+	if (pthread_mutex_init(&queue->mutex, NULL))
+		return (1);
+	queue->entries = malloc(sizeof(t_queue_entry) * config->number_of_coder);
+	if (!queue->entries)
+		return (1);
+	return (0);
+}
+
 int	main(void)
 {
 	pthread_t	*coders;
@@ -58,6 +73,7 @@ int	main(void)
 	t_thread_context	*ctx;
 	int					i;
 	t_log_queue			logs;
+	t_scheduler_queue	queue;
 
 	if (init_logs(&logs))
 		return (1);
@@ -67,17 +83,23 @@ int	main(void)
 	config.debug_time = 200;
 	config.refactor_time = 300;
 	config.burnout_time = 1000;
-	config.cooldown_time = 50;
+	config.cooldown_time = 10;
 	config.scheduler = FIFO;
 	config.start_time = now();
-	coders = malloc(sizeof(pthread_t) * config.number_of_coder);
 	ctx = malloc(sizeof(t_thread_context));
 	if (!ctx)
 		return (1);
+	coders = malloc(sizeof(pthread_t) * config.number_of_coder);
 	if (!coders)
 		return (1);
+	if (init_queue(&queue, &config))
+	{
+		free(coders);
+		return (1);
+	}
 	if (init_dongle_pool(&pool, &config))
 	{
+		free(queue.entries);
 		free(coders);
 		return (1);
 	}
@@ -113,5 +135,6 @@ int	main(void)
 	pthread_join(tmp, NULL);
 	free(pool.dongles);
 	free(coders);
+	free(queue.entries);
 	return (0);
 }
