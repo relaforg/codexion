@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:33:18 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 15:21:06 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/10 16:36:21 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,6 @@
 
 # include <pthread.h>
 # include <sys/time.h>
-# include <stdlib.h>
 
 # define TRUE 1
 # define FALSE 0
@@ -35,7 +34,8 @@ typedef enum e_message_type
 	DEBUG,
 	REFACTOR,
 	BURNOUT,
-	DONE
+	DONE,
+	SHUTDOWN
 }	t_message_type;
 
 typedef struct s_config
@@ -77,6 +77,7 @@ typedef struct s_log_queue
 	int				head;
 	int				tail;
 	int				count;
+	int				shutdown;
 	pthread_mutex_t	mutex;
 	pthread_cond_t	cond;
 }	t_log_queue;
@@ -112,6 +113,7 @@ typedef struct s_env
 	t_log_queue			logs;
 	t_scheduler_queue	queue;
 	pthread_t			monitor;
+	int					nb_coders_launched;
 }	t_env;
 
 void		*coder_routine(void *ctx);
@@ -122,6 +124,7 @@ void		debug(t_thread_context *ctx);
 void		compile(t_thread_context *ctx);
 int			*take_dongles(t_thread_context *ctx);
 void		send_log(int id, t_message_type type, t_log_queue *logs);
+void		stop_monitor(t_log_queue *logs);
 void		free_dongles(t_thread_context *ctx, int *dongles);
 void		fifo_sort(t_scheduler_queue *queue);
 void		edf_sort(t_scheduler_queue *queue);
@@ -131,5 +134,6 @@ int			init_dongle_pool(t_dongle_pool *pool, t_config *config);
 int			init_logs(t_log_queue *logs);
 int			init_queue(t_scheduler_queue *queue, t_config *config);
 int			init_env(t_env *env, int argc, char **argv);
+void		clean_env(t_env *env);
 
 #endif

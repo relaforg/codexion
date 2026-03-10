@@ -6,11 +6,12 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 15:00:24 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 15:38:25 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/10 16:37:44 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
+#include <stdlib.h>
 
 t_bool	dongles_available(t_thread_context *ctx, int left, int right)
 {
@@ -35,9 +36,9 @@ int	*take_dongles(t_thread_context *ctx)
 
 	left = ctx->id % ctx->config->number_of_coder;
 	right = (ctx->id + 1) % ctx->config->number_of_coder;
+	pthread_mutex_lock(&ctx->pool->mutex);
 	if (!dongles_available(ctx, left, right))
 		return (NULL);
-	pthread_mutex_lock(&ctx->pool->mutex);
 	dongles = malloc(sizeof(int) * 2);
 	if (!dongles)
 	{

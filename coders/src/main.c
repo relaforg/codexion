@@ -6,22 +6,13 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:38:50 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 15:34:04 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/10 16:38:34 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 #include <pthread.h>
 #include <stdlib.h>
-#include <stdio.h>
-
-long long	now(void)
-{
-	struct timeval	tv;
-
-	gettimeofday(&tv, NULL);
-	return ((tv.tv_sec * 1000000L + tv.tv_usec) / 1000);
-}
 
 int	launch_monitor(t_env *env)
 {
@@ -46,26 +37,28 @@ int	launch_monitor(t_env *env)
 int	launch_coders(pthread_t *coders, t_env *env)
 {
 	t_thread_context	*ctx;
-	int					i;
 
-	i = 0;
-	while (i < env->config.number_of_coder)
+	env->nb_coders_launched = 0;
+	while (env->nb_coders_launched < env->config.number_of_coder)
 	{
 		ctx = malloc(sizeof(t_thread_context));
 		if (!ctx)
-			break ;
-		ctx->id = i + 1;
+		{
+			send_log(-1, SHUTDOWN, &env->logs);
+			return (1);
+		}
+		ctx->id = env->nb_coders_launched + 1;
 		ctx->config = &env->config;
 		ctx->pool = &env->pool;
 		ctx->logs = &env->logs;
 		ctx->queue = &env->queue;
-		if (pthread_create(&coders[i], NULL, coder_routine, (void *)ctx))
+		if (pthread_create(&coders[env->nb_coders_launched], NULL,
+				coder_routine, (void *)ctx))
 		{
 			free(ctx);
-			free(env->pool.dongles);
 			return (1);
 		}
-		i++;
+		env->nb_coders_launched++;
 	}
 	return (0);
 }
@@ -75,7 +68,7 @@ void	join_threads(t_env *env, pthread_t *coders)
 	int	i;
 
 	i = 0;
-	while (i < env->config.number_of_coder)
+	while (i < env->nb_coders_launched)
 	{
 		pthread_join(coders[i], NULL);
 		i++;
@@ -83,26 +76,37 @@ void	join_threads(t_env *env, pthread_t *coders)
 	pthread_join(env->monitor, NULL);
 }
 
-int	main(int argc, char **argv)
+int	run(t_env *env)
 {
-	t_env		env;
 	pthread_t	*coders;
 
-	if (init_env(&env, argc, argv))
-		return (1);
-	coders = malloc(sizeof(pthread_t) * env.config.number_of_coder);
+	coders = malloc(sizeof(pthread_t) * env->config.number_of_coder);
 	if (!coders)
 		return (1);
-	if (launch_monitor(&env))
+	if (launch_monitor(env))
+		return (free(coders), 1);
+	if (launch_coders(coders, env))
 	{
+		join_threads(env, coders);
 		free(coders);
 		return (1);
 	}
-	if (launch_coders(coders, &env))
-		return (1);
-	join_threads(&env, coders);
-	free(env.pool.dongles);
+	join_threads(env, coders);
 	free(coders);
-	free(env.queue.entries);
+	return (0);
+}
+
+int	main(int argc, char **argv)
+{
+	t_env	env;
+
+	if (init_env(&env, argc, argv))
+		return (1);
+	if (run(&env))
+	{
+		clean_env(&env);
+		return (1);
+	}
+	clean_env(&env);
 	return (0);
 }

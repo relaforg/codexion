@@ -6,11 +6,12 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 10:34:27 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 15:34:11 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/10 16:37:02 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h" 
+#include <stdlib.h>
 
 void	send_log(int id, t_message_type type, t_log_queue *logs)
 {

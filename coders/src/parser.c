@@ -6,12 +6,13 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 13:34:08 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 13:53:13 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/10 16:37:29 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 #include <string.h>
+#include <stdlib.h>
 
 int	parse_args(int argc, char **argv, t_config *config)
 {

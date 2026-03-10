@@ -36,7 +36,8 @@ SRCS			:= main.c \
 				   sort.c \
 				   parser.c \
 				   dongle.c \
-				   initialisations.c
+				   initialisations.c \
+				   time.c
 
 RELEASE_OBJS	:= $(SRCS:%.c=$(RELEASE_DIR)/%.o)
 DEBUG_OBJS  	:= $(SRCS:%.c=$(DEBUG_DIR)/%.o)
@@ -48,6 +49,8 @@ ASAN_DEPS   	:= $(ASAN_OBJS:.o=.d)
 
 TOTAL			:= $(words $(SRCS))
 CURRENT			= 0 
+
+ARGS ?= 4 10000 1 1 1 1 1 edf
 
 ifeq ($(MODE), debug)
 	CFLAGS += -g3
@@ -84,7 +87,7 @@ $(ASAN_DIR)/%.o: %.c
 
 run: $(NAME)
 	@echo
-	./$(NAME)
+	./$(NAME) $(ARGS)
 
 debug: $(DEBUG_NAME)
 

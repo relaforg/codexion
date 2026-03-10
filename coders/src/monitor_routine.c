@@ -6,12 +6,13 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 15:31:42 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 15:32:19 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/10 16:37:15 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 t_log_entry	dequeue_log(t_log_queue *logs)
 {
@@ -61,6 +62,11 @@ void	*monitor_routine(void *context)
 		{
 			count++;
 			continue ;
+		}
+		else if (msg.message == SHUTDOWN)
+		{
+			free(context);
+			return (NULL);
 		}
 		if (!handle_log_entry(msg, ctx->config->start_time))
 			return (free(context), NULL);
