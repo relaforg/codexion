@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:38:50 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 13:50:56 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/10 15:34:04 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,124 +15,94 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-int	init_dongle_pool(t_dongle_pool *pool, t_config *config)
+long long	now(void)
 {
-	int	i;
+	struct timeval	tv;
 
-	pool->dongles = malloc(sizeof(t_dongle) * config->number_of_coder);
-	if (!pool->dongles)
-		return (1);
-	pool->size = config->number_of_coder;
-	i = 0;
-	while (i < config->number_of_coder)
-	{
-		pool->dongles[i].is_available = TRUE;
-		pool->dongles[i].last_used = -config->cooldown_time;
-		i++;
-	}
-	if (pthread_mutex_init(&pool->mutex, NULL))
-	{
-		free(pool->dongles);
-		return (1);
-	}
-	return (0);
+	gettimeofday(&tv, NULL);
+	return ((tv.tv_sec * 1000000L + tv.tv_usec) / 1000);
 }
 
-int	init_logs(t_log_queue *logs)
+int	launch_monitor(t_env *env)
 {
-	logs->head = 0;
-	logs->tail = 0;
-	logs->count = 0;
-	if (pthread_mutex_init(&logs->mutex, NULL))
-		return (1);
-	if (pthread_cond_init(&logs->cond, NULL))
-		return (1);
-	return (0);
-}
-
-int	init_queue(t_scheduler_queue *queue, t_config *config)
-{
-	queue->size = 0;
-	if (config->scheduler == EDF)
-		queue->sort = EDF_sort;
-	else
-		queue->sort = FIFO_sort;
-	if (pthread_mutex_init(&queue->mutex, NULL))
-		return (1);
-	queue->entries = malloc(sizeof(t_queue_entry) * config->number_of_coder);
-	if (!queue->entries)
-		return (1);
-	return (0);
-}
-
-int	main(int argc, char **argv)
-{
-	pthread_t	*coders;
-	pthread_t	tmp;
-	t_config	config;
-	t_dongle_pool	pool;
 	t_thread_context	*ctx;
-	int					i;
-	t_log_queue			logs;
-	t_scheduler_queue	queue;
 
-	if (validate_args(argc, argv, &config))
-	{
-		printf("Arguments are invalid\n");
-		return (1);
-	}
-	if (init_logs(&logs))
-		return (1);
 	ctx = malloc(sizeof(t_thread_context));
 	if (!ctx)
 		return (1);
-	coders = malloc(sizeof(pthread_t) * config.number_of_coder);
-	if (!coders)
-		return (1);
-	if (init_queue(&queue, &config))
-	{
-		free(coders);
-		return (1);
-	}
-	if (init_dongle_pool(&pool, &config))
-	{
-		free(queue.entries);
-		free(coders);
-		return (1);
-	}
 	ctx->id = -1;
-	ctx->config = &config;
-	ctx->pool = &pool;
-	ctx->logs = &logs;
-	if (pthread_create(&tmp, NULL, monitor_routine, (void *) ctx))
+	ctx->config = &env->config;
+	ctx->pool = &env->pool;
+	ctx->logs = &env->logs;
+	ctx->queue = &env->queue;
+	if (pthread_create(&env->monitor, NULL, monitor_routine, (void *)ctx))
+	{
+		free(ctx);
 		return (1);
+	}
+	return (0);
+}
+
+int	launch_coders(pthread_t *coders, t_env *env)
+{
+	t_thread_context	*ctx;
+	int					i;
+
 	i = 0;
-	while (i < config.number_of_coder)
+	while (i < env->config.number_of_coder)
 	{
 		ctx = malloc(sizeof(t_thread_context));
 		if (!ctx)
-			break;
+			break ;
 		ctx->id = i + 1;
-		ctx->config = &config;
-		ctx->pool = &pool;
-		ctx->logs = &logs;
-		ctx->queue = &queue;
-		if (pthread_create(&coders[i], NULL, coder_routine, (void *) ctx))
+		ctx->config = &env->config;
+		ctx->pool = &env->pool;
+		ctx->logs = &env->logs;
+		ctx->queue = &env->queue;
+		if (pthread_create(&coders[i], NULL, coder_routine, (void *)ctx))
 		{
-			free(pool.dongles);
+			free(ctx);
+			free(env->pool.dongles);
 			return (1);
 		}
 		i++;
 	}
+	return (0);
+}
+
+void	join_threads(t_env *env, pthread_t *coders)
+{
+	int	i;
+
 	i = 0;
-	while (i < config.number_of_coder)
+	while (i < env->config.number_of_coder)
 	{
 		pthread_join(coders[i], NULL);
 		i++;
 	}
-	pthread_join(tmp, NULL);
-	free(pool.dongles);
+	pthread_join(env->monitor, NULL);
+}
+
+int	main(int argc, char **argv)
+{
+	t_env		env;
+	pthread_t	*coders;
+
+	if (init_env(&env, argc, argv))
+		return (1);
+	coders = malloc(sizeof(pthread_t) * env.config.number_of_coder);
+	if (!coders)
+		return (1);
+	if (launch_monitor(&env))
+	{
+		free(coders);
+		return (1);
+	}
+	if (launch_coders(coders, &env))
+		return (1);
+	join_threads(&env, coders);
+	free(env.pool.dongles);
 	free(coders);
-	free(queue.entries);
+	free(env.queue.entries);
 	return (0);
 }

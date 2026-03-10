@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:33:18 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 13:49:38 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/10 15:21:06 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,6 +105,15 @@ typedef struct s_thread_context
 	t_scheduler_queue	*queue;
 }	t_thread_context;
 
+typedef struct s_env
+{
+	t_config			config;
+	t_dongle_pool		pool;
+	t_log_queue			logs;
+	t_scheduler_queue	queue;
+	pthread_t			monitor;
+}	t_env;
+
 void		*coder_routine(void *ctx);
 void		*monitor_routine(void *ctx);
 long long	now(void);
@@ -114,8 +123,13 @@ void		compile(t_thread_context *ctx);
 int			*take_dongles(t_thread_context *ctx);
 void		send_log(int id, t_message_type type, t_log_queue *logs);
 void		free_dongles(t_thread_context *ctx, int *dongles);
-void		FIFO_sort(t_scheduler_queue *queue);
-void		EDF_sort(t_scheduler_queue *queue);
+void		fifo_sort(t_scheduler_queue *queue);
+void		edf_sort(t_scheduler_queue *queue);
 int			validate_args(int argc, char **argv, t_config *config);
+t_bool		ask_dongles(t_thread_context *ctx, long long last_compile);
+int			init_dongle_pool(t_dongle_pool *pool, t_config *config);
+int			init_logs(t_log_queue *logs);
+int			init_queue(t_scheduler_queue *queue, t_config *config);
+int			init_env(t_env *env, int argc, char **argv);
 
 #endif

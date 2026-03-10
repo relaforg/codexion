@@ -30,10 +30,13 @@ RED				:= \033[31m
 
 VPATH			:= src
 SRCS			:= main.c \
-	   			   routines.c \
+	   			   coders_routine.c \
+	   			   monitor_routine.c \
 				   actions.c \
 				   sort.c \
-				   parser.c
+				   parser.c \
+				   dongle.c \
+				   initialisations.c
 
 RELEASE_OBJS	:= $(SRCS:%.c=$(RELEASE_DIR)/%.o)
 DEBUG_OBJS  	:= $(SRCS:%.c=$(DEBUG_DIR)/%.o)

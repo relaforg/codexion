@@ -6,13 +6,13 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 11:34:16 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 13:32:29 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/10 14:53:20 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-void	FIFO_sort(t_scheduler_queue *queue)
+void	fifo_sort(t_scheduler_queue *queue)
 {
 	int				i;
 	t_queue_entry	tmp;
@@ -32,7 +32,7 @@ void	FIFO_sort(t_scheduler_queue *queue)
 	}
 }
 
-void	EDF_sort(t_scheduler_queue *queue)
+void	edf_sort(t_scheduler_queue *queue)
 {
 	int				i;
 	t_queue_entry	tmp;
