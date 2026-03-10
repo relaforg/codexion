@@ -6,12 +6,15 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:33:18 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 16:36:21 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/10 16:49:24 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CODEXION_H
 # define CODEXION_H
+# define _DEFAULT_SOURCE
+# define _XOPEN_SOURCE 500
+
 
 # include <pthread.h>
 # include <sys/time.h>
