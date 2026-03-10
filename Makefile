@@ -32,7 +32,8 @@ VPATH			:= src
 SRCS			:= main.c \
 	   			   routines.c \
 				   actions.c \
-				   sort.c
+				   sort.c \
+				   parser.c
 
 RELEASE_OBJS	:= $(SRCS:%.c=$(RELEASE_DIR)/%.o)
 DEBUG_OBJS  	:= $(SRCS:%.c=$(DEBUG_DIR)/%.o)

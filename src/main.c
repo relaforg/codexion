@@ -6,13 +6,14 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:38:50 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 12:08:57 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/10 13:50:56 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 #include <pthread.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 int	init_dongle_pool(t_dongle_pool *pool, t_config *config)
 {
@@ -64,7 +65,7 @@ int	init_queue(t_scheduler_queue *queue, t_config *config)
 	return (0);
 }
 
-int	main(void)
+int	main(int argc, char **argv)
 {
 	pthread_t	*coders;
 	pthread_t	tmp;
@@ -75,17 +76,13 @@ int	main(void)
 	t_log_queue			logs;
 	t_scheduler_queue	queue;
 
+	if (validate_args(argc, argv, &config))
+	{
+		printf("Arguments are invalid\n");
+		return (1);
+	}
 	if (init_logs(&logs))
 		return (1);
-	config.number_of_coder = 4;
-	config.number_of_compilation = 2;
-	config.compilation_time = 100;
-	config.debug_time = 200;
-	config.refactor_time = 300;
-	config.burnout_time = 1000;
-	config.cooldown_time = 10;
-	config.scheduler = EDF;
-	config.start_time = now();
 	ctx = malloc(sizeof(t_thread_context));
 	if (!ctx)
 		return (1);

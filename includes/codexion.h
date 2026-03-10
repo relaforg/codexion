@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:33:18 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 11:36:31 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/10 13:49:38 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,8 @@ typedef int	t_bool;
 typedef enum e_scheduler
 {
 	FIFO,
-	EDF
+	EDF,
+	NONE
 }	t_scheduler;
 
 typedef enum e_message_type
@@ -34,18 +35,17 @@ typedef enum e_message_type
 	DEBUG,
 	REFACTOR,
 	BURNOUT,
-	DONE,
-	NONE
+	DONE
 }	t_message_type;
 
 typedef struct s_config
 {
 	int			number_of_coder;
-	int			number_of_compilation;
+	int			burnout_time;
 	int			compilation_time;
 	int			debug_time;
 	int			refactor_time;
-	int			burnout_time;
+	int			number_of_compilation;
 	int			cooldown_time;
 	t_scheduler	scheduler;
 	long long	start_time;
@@ -116,5 +116,6 @@ void		send_log(int id, t_message_type type, t_log_queue *logs);
 void		free_dongles(t_thread_context *ctx, int *dongles);
 void		FIFO_sort(t_scheduler_queue *queue);
 void		EDF_sort(t_scheduler_queue *queue);
+int			validate_args(int argc, char **argv, t_config *config);
 
 #endif
