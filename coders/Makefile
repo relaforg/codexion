@@ -38,7 +38,8 @@ SRCS			:= main.c \
 				   dongle.c \
 				   initialisations.c \
 				   time.c \
-				   queue.c
+				   queue.c \
+				   utils.c
 
 RELEASE_OBJS	:= $(SRCS:%.c=$(RELEASE_DIR)/%.o)
 DEBUG_OBJS  	:= $(SRCS:%.c=$(DEBUG_DIR)/%.o)

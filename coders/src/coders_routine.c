@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 10:34:27 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/11 10:25:35 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/11 12:00:31 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,11 @@
 void	send_log(int id, t_message_type type, t_log_queue *logs)
 {
 	pthread_mutex_lock(&logs->mutex);
+	if (logs->count == 1024)
+	{
+		pthread_mutex_unlock(&logs->mutex);
+		return ;
+	}
 	logs->count++;
 	logs->entries[logs->tail].coder_id = id;
 	logs->entries[logs->tail].message = type;

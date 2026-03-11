@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:33:18 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/11 11:17:17 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/11 12:02:01 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,7 +126,6 @@ void		debug(t_thread_context *ctx);
 void		compile(t_thread_context *ctx);
 int			*take_dongles(t_thread_context *ctx);
 void		send_log(int id, t_message_type type, t_log_queue *logs);
-void		stop_monitor(t_log_queue *logs);
 void		free_dongles(t_thread_context *ctx, int *dongles);
 void		fifo_sort(t_scheduler_queue *queue);
 void		edf_sort(t_scheduler_queue *queue);
@@ -138,5 +137,6 @@ int			init_queue(t_scheduler_queue *queue, t_config *config);
 int			init_env(t_env *env, int argc, char **argv);
 void		clean_env(t_env *env);
 void		ensure_in_queue(t_thread_context *ctx, long long last_compile);
+void		fill_context(t_thread_context *ctx, t_env *env);
 
 #endif
