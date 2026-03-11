@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 10:34:27 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 18:00:06 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/11 10:25:35 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,11 +26,21 @@ void	send_log(int id, t_message_type type, t_log_queue *logs)
 	pthread_mutex_unlock(&logs->mutex);
 }
 
-void	pop_queue_tail(t_scheduler_queue *queue)
+void	pop_queue(t_thread_context *ctx)
 {
-	pthread_mutex_lock(&queue->mutex);
-	queue->size--;
-	pthread_mutex_unlock(&queue->mutex);
+	int	i;
+
+	pthread_mutex_lock(&ctx->queue->mutex);
+	i = 0;
+	while (i < ctx->queue->size && ctx->queue->entries[i].coder_id != ctx->id)
+		i++;
+	while (i < ctx->queue->size - 1)
+	{
+		ctx->queue->entries[i] = ctx->queue->entries[i + 1];
+		i++;
+	}
+	ctx->queue->size--;
+	pthread_mutex_unlock(&ctx->queue->mutex);
 }
 
 int	check_burnout(t_thread_context *ctx, long long last_compile)
@@ -47,7 +57,7 @@ int	check_burnout(t_thread_context *ctx, long long last_compile)
 void	constant_coder_routine(t_thread_context *ctx, long long *last_compile,
 							int	*dongles, int *nbr_compilation)
 {
-	pop_queue_tail(ctx->queue);
+	pop_queue(ctx);
 	*last_compile = now() - ctx->config->start_time;
 	compile(ctx);
 	free_dongles(ctx, dongles);
@@ -73,9 +83,7 @@ void	*coder_routine(void *context)
 			free(context);
 			return (NULL);
 		}
-		if (!ask_dongles(ctx, last_compile))
-			continue ;
-		dongles = take_dongles(ctx);
+		dongles = ask_dongles(ctx, last_compile);
 		if (!dongles)
 			continue ;
 		constant_coder_routine(ctx, &last_compile, dongles, &nbr_compilation);

@@ -50,7 +50,7 @@ ASAN_DEPS   	:= $(ASAN_OBJS:.o=.d)
 TOTAL			:= $(words $(SRCS))
 CURRENT			= 0 
 
-ARGS ?= 4 10000 1 1 1 1 1 edf
+ARGS ?= 4 10000 100 200 300 4 10 edf
 
 ifeq ($(MODE), debug)
 	CFLAGS += -g3

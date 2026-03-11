@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:33:18 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 16:49:24 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/11 10:24:54 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,7 +132,7 @@ void		free_dongles(t_thread_context *ctx, int *dongles);
 void		fifo_sort(t_scheduler_queue *queue);
 void		edf_sort(t_scheduler_queue *queue);
 int			validate_args(int argc, char **argv, t_config *config);
-t_bool		ask_dongles(t_thread_context *ctx, long long last_compile);
+int			*ask_dongles(t_thread_context *ctx, long long last_compile);
 int			init_dongle_pool(t_dongle_pool *pool, t_config *config);
 int			init_logs(t_log_queue *logs);
 int			init_queue(t_scheduler_queue *queue, t_config *config);
