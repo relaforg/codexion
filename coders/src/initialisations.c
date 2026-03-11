@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 15:20:05 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 16:38:18 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/11 13:50:30 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,8 @@ int	init_logs(t_log_queue *logs)
 
 int	init_queue(t_scheduler_queue *queue, t_config *config)
 {
+	int	i;
+
 	queue->size = 0;
 	if (config->scheduler == EDF)
 		queue->sort = edf_sort;
@@ -62,6 +64,15 @@ int	init_queue(t_scheduler_queue *queue, t_config *config)
 	queue->entries = malloc(sizeof(t_queue_entry) * config->number_of_coder);
 	if (!queue->entries)
 		return (1);
+	i = 0;
+	while (i < config->number_of_coder)
+	{
+		queue->entries[queue->size].coder_id = i + 1;
+		queue->entries[queue->size].request_time = now();
+		queue->entries[queue->size].deadline = config->burnout_time;
+		queue->size++;
+		i++;
+	}
 	return (0);
 }
 

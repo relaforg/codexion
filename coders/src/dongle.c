@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 15:00:24 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/11 11:23:19 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/11 14:46:31 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,9 +96,8 @@ int	*ask_dongles(t_thread_context *ctx, long long last_compile)
 	int		neighbor_id;
 	int		*dongles;
 
+	(void) last_compile;
 	pthread_mutex_lock(&ctx->queue->mutex);
-	ensure_in_queue(ctx, last_compile);
-	ctx->queue->sort(ctx->queue);
 	i = 0;
 	while (i < ctx->queue->size && ctx->queue->entries[i].coder_id != ctx->id)
 	{
