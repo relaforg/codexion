@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 10:34:27 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/11 15:31:47 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/11 15:36:03 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,44 +29,6 @@ void	send_log(int id, t_message_type type, t_log_queue *logs)
 	logs->tail = (logs->tail + 1) % 1024;
 	pthread_cond_broadcast(&logs->cond);
 	pthread_mutex_unlock(&logs->mutex);
-}
-
-void	pop_queue(t_thread_context *ctx)
-{
-	int	i;
-
-	pthread_mutex_lock(&ctx->queue->mutex);
-	i = 0;
-	while (i < ctx->queue->size && ctx->queue->entries[i].coder_id != ctx->id)
-		i++;
-	while (i < ctx->queue->size - 1)
-	{
-		ctx->queue->entries[i] = ctx->queue->entries[i + 1];
-		i++;
-	}
-	ctx->queue->size--;
-	pthread_mutex_unlock(&ctx->queue->mutex);
-}
-
-void	update_queue(t_thread_context *ctx, long long last_compile)
-{
-	int	i;
-
-	i = 0;
-	pthread_mutex_lock(&ctx->queue->mutex);
-	while (i < ctx->queue->size)
-	{
-		if (ctx->queue->entries[i].coder_id == ctx->id)
-		{
-			ctx->queue->entries[i].deadline = last_compile
-				+ ctx->config->burnout_time;
-			ctx->queue->entries[i].request_time = now();
-			break ;
-		}
-		i++;
-	}
-	ctx->queue->sort(ctx->queue);
-	pthread_mutex_unlock(&ctx->queue->mutex);
 }
 
 int	check_burnout(t_thread_context *ctx, long long last_compile)

@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:33:18 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/11 12:02:01 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/11 15:35:49 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,5 +138,7 @@ int			init_env(t_env *env, int argc, char **argv);
 void		clean_env(t_env *env);
 void		ensure_in_queue(t_thread_context *ctx, long long last_compile);
 void		fill_context(t_thread_context *ctx, t_env *env);
+void		update_queue(t_thread_context *ctx, long long last_compile);
+void		pop_queue(t_thread_context *ctx);
 
 #endif
