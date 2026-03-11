@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 15:31:42 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/10 16:37:15 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/11 11:23:17 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,11 @@ int	handle_log_entry(t_log_entry msg, long long start_time)
 {
 	printf("%lld %d ", msg.timestamp - start_time, msg.coder_id);
 	if (msg.message == DONGLE)
+	{
 		printf("has taken a dongle\n");
+		printf("%lld %d ", msg.timestamp - start_time, msg.coder_id);
+		printf("has taken a dongle\n");
+	}
 	else if (msg.message == COMPILE)
 		printf("is compiling\n");
 	else if (msg.message == DEBUG)

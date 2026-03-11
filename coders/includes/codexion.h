@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:33:18 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/11 10:24:54 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/11 11:17:17 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 # define CODEXION_H
 # define _DEFAULT_SOURCE
 # define _XOPEN_SOURCE 500
-
 
 # include <pthread.h>
 # include <sys/time.h>
@@ -138,5 +137,6 @@ int			init_logs(t_log_queue *logs);
 int			init_queue(t_scheduler_queue *queue, t_config *config);
 int			init_env(t_env *env, int argc, char **argv);
 void		clean_env(t_env *env);
+void		ensure_in_queue(t_thread_context *ctx, long long last_compile);
 
 #endif

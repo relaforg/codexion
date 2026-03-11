@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 15:00:24 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/11 11:13:06 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/11 11:23:19 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,6 @@ int	*take_dongles(t_thread_context *ctx)
 	dongles[0] = left;
 	dongles[1] = right;
 	send_log(ctx->id, DONGLE, ctx->logs);
-	send_log(ctx->id, DONGLE, ctx->logs);
 	return (dongles);
 }
 
@@ -71,27 +70,6 @@ void	free_dongles(t_thread_context *ctx, int *dongles)
 	free(dongles);
 }
 
-void	ensure_in_queue(t_thread_context *ctx, long long last_compile)
-{
-	int		i;
-
-	i = 0;
-	while (i < ctx->queue->size)
-	{
-		if (ctx->queue->entries[i].coder_id == ctx->id)
-			break ;
-		i++;
-	}
-	if (i == ctx->queue->size)
-	{
-		ctx->queue->entries[ctx->queue->size].coder_id = ctx->id;
-		ctx->queue->entries[ctx->queue->size].request_time = now();
-		ctx->queue->entries[ctx->queue->size].deadline = last_compile
-			+ ctx->config->burnout_time;
-		ctx->queue->size++;
-	}
-}
-
 t_bool	neighbor_can_compile(t_thread_context *ctx, int neighbor_id)
 {
 	int		left;
@@ -102,11 +80,12 @@ t_bool	neighbor_can_compile(t_thread_context *ctx, int neighbor_id)
 	right = (neighbor_id + 1) % ctx->config->number_of_coder;
 	pthread_mutex_lock(&ctx->pool->mutex);
 	result = (ctx->pool->dongles[left].is_available
-		&& ctx->pool->dongles[right].is_available
-		&& now() - ctx->config->start_time
-		- ctx->pool->dongles[left].last_used >= ctx->config->cooldown_time
-		&& now() - ctx->config->start_time
-		- ctx->pool->dongles[right].last_used >= ctx->config->cooldown_time);
+			&& ctx->pool->dongles[right].is_available
+			&& now() - ctx->config->start_time
+			- ctx->pool->dongles[left].last_used >= ctx->config->cooldown_time
+			&& now() - ctx->config->start_time
+			- ctx->pool->dongles[right].last_used
+			>= ctx->config->cooldown_time);
 	pthread_mutex_unlock(&ctx->pool->mutex);
 	return (result);
 }
@@ -114,15 +93,9 @@ t_bool	neighbor_can_compile(t_thread_context *ctx, int neighbor_id)
 int	*ask_dongles(t_thread_context *ctx, long long last_compile)
 {
 	int		i;
-	int		n;
-	int		left_id;
-	int		right_id;
 	int		neighbor_id;
 	int		*dongles;
 
-	n = ctx->config->number_of_coder;
-	left_id = ((ctx->id - 2 + n) % n) + 1;
-	right_id = (ctx->id % n) + 1;
 	pthread_mutex_lock(&ctx->queue->mutex);
 	ensure_in_queue(ctx, last_compile);
 	ctx->queue->sort(ctx->queue);
@@ -130,7 +103,10 @@ int	*ask_dongles(t_thread_context *ctx, long long last_compile)
 	while (i < ctx->queue->size && ctx->queue->entries[i].coder_id != ctx->id)
 	{
 		neighbor_id = ctx->queue->entries[i].coder_id;
-		if ((neighbor_id == left_id || neighbor_id == right_id)
+		if ((neighbor_id == ((ctx->id - 2 + ctx->config->number_of_coder)
+					% ctx->config->number_of_coder) + 1
+				|| neighbor_id == (ctx->id
+					% ctx->config->number_of_coder) + 1)
 			&& neighbor_can_compile(ctx, neighbor_id))
 		{
 			pthread_mutex_unlock(&ctx->queue->mutex);
