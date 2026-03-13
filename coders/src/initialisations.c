@@ -6,13 +6,14 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 15:20:05 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/11 13:50:30 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/13 09:11:36 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int	init_dongle_pool(t_dongle_pool *pool, t_config *config)
 {
@@ -84,6 +85,7 @@ void	clean_env(t_env *env)
 	free(env->queue.entries);
 	pthread_mutex_destroy(&env->logs.mutex);
 	pthread_cond_destroy(&env->logs.cond);
+	free(env->coders);
 }
 
 int	init_env(t_env *env, int argc, char **argv)
@@ -102,5 +104,13 @@ int	init_env(t_env *env, int argc, char **argv)
 		free(env->queue.entries);
 		return (1);
 	}
+	env->coders = malloc(sizeof(t_coder) * env->config.number_of_coder);
+	if (!env->coders)
+	{
+		free(env->queue.entries);
+		free(env->pool.dongles);
+		return (1);
+	}
+	memset(env->coders, 0, sizeof(t_coder) * env->config.number_of_coder);
 	return (0);
 }

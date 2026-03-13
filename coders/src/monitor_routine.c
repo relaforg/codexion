@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 15:31:42 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/11 11:23:17 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/13 09:19:55 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ t_log_entry	dequeue_log(t_log_queue *logs)
 	return (msg);
 }
 
-int	handle_log_entry(t_log_entry msg, long long start_time)
+int	handle_log_entry(t_coder *coders, t_log_entry msg, long long start_time)
 {
 	printf("%lld %d ", msg.timestamp - start_time, msg.coder_id);
 	if (msg.message == DONGLE)
@@ -38,7 +38,10 @@ int	handle_log_entry(t_log_entry msg, long long start_time)
 		printf("has taken a dongle\n");
 	}
 	else if (msg.message == COMPILE)
+	{
+		coders[msg.coder_id - 1].last_compile = now() - start_time;
 		printf("is compiling\n");
+	}
 	else if (msg.message == DEBUG)
 		printf("is debugging\n");
 	else if (msg.message == REFACTOR)
@@ -53,29 +56,34 @@ int	handle_log_entry(t_log_entry msg, long long start_time)
 
 void	*monitor_routine(void *context)
 {
-	t_thread_context	*ctx;
+	t_env	*ctx;
 	int					count;
 	t_log_entry			msg;
+	int					i;
 
-	ctx = (t_thread_context *) context;
+	ctx = (t_env *) context;
 	count = 0;
-	while (count < ctx->config->number_of_coder)
+	while (count < ctx->config.number_of_coder)
 	{
-		msg = dequeue_log(ctx->logs);
+		i = 0;
+		while (i < ctx->nb_coders_launched)
+		{
+			if (now() - ctx->config.start_time - ctx->coders[i].last_compile
+				>= ctx->config.burnout_time)
+				send_log(i + 1, BURNOUT, &ctx->logs);
+			i++;
+		}
+		msg = dequeue_log(&ctx->logs);
 		if (msg.message == DONE)
 		{
 			count++;
 			continue ;
 		}
 		else if (msg.message == SHUTDOWN)
-		{
-			free(context);
 			return (NULL);
-		}
-		if (!handle_log_entry(msg, ctx->config->start_time))
-			return (free(context), NULL);
+		if (!handle_log_entry(ctx->coders, msg, ctx->config.start_time))
+			return (NULL);
 	}
 	printf("\nAll coders are done !\n");
-	free(context);
 	return (NULL);
 }

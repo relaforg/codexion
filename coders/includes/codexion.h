@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:33:18 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/11 15:35:49 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/13 09:21:30 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,6 +108,11 @@ typedef struct s_thread_context
 	t_scheduler_queue	*queue;
 }	t_thread_context;
 
+typedef struct s_coder
+{
+	int				last_compile;
+}	t_coder;
+
 typedef struct s_env
 {
 	t_config			config;
@@ -116,6 +121,7 @@ typedef struct s_env
 	t_scheduler_queue	queue;
 	pthread_t			monitor;
 	int					nb_coders_launched;
+	t_coder				*coders;
 }	t_env;
 
 void		*coder_routine(void *ctx);

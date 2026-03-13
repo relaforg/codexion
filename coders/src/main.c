@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:38:50 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/11 12:02:25 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/13 09:01:20 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,21 +16,8 @@
 
 int	launch_monitor(t_env *env)
 {
-	t_thread_context	*ctx;
-
-	ctx = malloc(sizeof(t_thread_context));
-	if (!ctx)
+	if (pthread_create(&env->monitor, NULL, monitor_routine, (void *)env))
 		return (1);
-	ctx->id = -1;
-	ctx->config = &env->config;
-	ctx->pool = &env->pool;
-	ctx->logs = &env->logs;
-	ctx->queue = &env->queue;
-	if (pthread_create(&env->monitor, NULL, monitor_routine, (void *)ctx))
-	{
-		free(ctx);
-		return (1);
-	}
 	return (0);
 }
 
