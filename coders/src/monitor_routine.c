@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 15:31:42 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/13 09:23:41 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/13 09:30:56 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,7 @@ void	*monitor_routine(void *context)
 
 	ctx = (t_env *) context;
 	count = 0;
-	while (count < ctx->config.number_of_coder)
+	while (count < ctx->nb_coders_launched)
 	{
 		check_coder_death(ctx);
 		msg = dequeue_log(&ctx->logs);
