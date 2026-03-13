@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 15:31:42 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/13 09:19:55 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/13 09:23:41 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,25 +54,31 @@ int	handle_log_entry(t_coder *coders, t_log_entry msg, long long start_time)
 	return (1);
 }
 
+void	check_coder_death(t_env *ctx)
+{
+	int	i;
+
+	i = 0;
+	while (i < ctx->nb_coders_launched)
+	{
+		if (now() - ctx->config.start_time - ctx->coders[i].last_compile
+			>= ctx->config.burnout_time)
+			send_log(i + 1, BURNOUT, &ctx->logs);
+		i++;
+	}
+}
+
 void	*monitor_routine(void *context)
 {
-	t_env	*ctx;
+	t_env				*ctx;
 	int					count;
 	t_log_entry			msg;
-	int					i;
 
 	ctx = (t_env *) context;
 	count = 0;
 	while (count < ctx->config.number_of_coder)
 	{
-		i = 0;
-		while (i < ctx->nb_coders_launched)
-		{
-			if (now() - ctx->config.start_time - ctx->coders[i].last_compile
-				>= ctx->config.burnout_time)
-				send_log(i + 1, BURNOUT, &ctx->logs);
-			i++;
-		}
+		check_coder_death(ctx);
 		msg = dequeue_log(&ctx->logs);
 		if (msg.message == DONE)
 		{
