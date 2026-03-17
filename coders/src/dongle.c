@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 15:00:24 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/17 10:23:04 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/17 16:51:37 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 
 t_bool	dongles_available(t_thread_context *ctx, int left, int right)
 {
+	if (left == right)
+		return (FALSE);
 	if (!ctx->pool->dongles[left].is_available
 		|| !ctx->pool->dongles[right].is_available
 		|| now() - ctx->config->start_time - ctx->pool->dongles[left].last_used
@@ -96,8 +98,6 @@ int	*ask_dongles(t_thread_context *ctx)
 	int		neighbor_id;
 	int		*dongles;
 
-	if (ctx->config->number_of_coder < 2)
-		return (NULL);
 	pthread_mutex_lock(&ctx->queue->mutex);
 	i = 0;
 	while (i < ctx->queue->size && ctx->queue->entries[i].coder->id

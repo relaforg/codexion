@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 15:20:05 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/17 09:34:49 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/17 16:50:41 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,13 +34,6 @@ int	init_dongle_pool(t_dongle_pool *pool, t_config *config)
 		free(pool->dongles);
 		return (1);
 	}
-	return (0);
-}
-
-int	init_print(t_print *print)
-{
-	if (pthread_mutex_init(&print->mutex, NULL))
-		return (1);
 	return (0);
 }
 
@@ -106,24 +99,6 @@ int	init_queue(t_scheduler_queue *queue, t_config *config, t_coder *coders)
 	return (0);
 }
 
-void	clean_env(t_env *env)
-{
-	int	i;
-
-	i = 0;
-	while (i < env->config.number_of_coder)
-	{
-		pthread_mutex_destroy(&env->coders[i].mutex);
-		i++;
-	}
-	free(env->coders);
-	pthread_mutex_destroy(&env->pool.mutex);
-	free(env->pool.dongles);
-	pthread_mutex_destroy(&env->queue.mutex);
-	free(env->queue.entries);
-	pthread_mutex_destroy(&env->print.mutex);
-}
-
 int	init_env(t_env *env, int argc, char **argv)
 {
 	if (validate_args(argc, argv, &env->config))
@@ -131,7 +106,7 @@ int	init_env(t_env *env, int argc, char **argv)
 		printf("Arguments are invalid\n");
 		return (1);
 	}
-	if (init_print(&env->print))
+	if (pthread_mutex_init(&env->print.mutex, NULL))
 		return (1);
 	if (init_burnout(&env->burnout))
 		return (1);

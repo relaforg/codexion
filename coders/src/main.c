@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:38:50 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/17 10:21:48 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/17 16:02:50 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,17 +30,13 @@ int	launch_coders(t_env *env)
 	{
 		ctx = malloc(sizeof(t_thread_context));
 		if (!ctx)
-		{
-			/*send_log(-1, SHUTDOWN, &env->logs);*/
 			return (1);
-		}
 		ctx->coder = &env->coders[env->nb_coders_launched];
 		fill_context(ctx, env);
 		if (pthread_create(&env->coders[env->nb_coders_launched].tid, NULL,
 				coder_routine, (void *)ctx))
 		{
 			free(ctx);
-			/*send_log(-1, SHUTDOWN, &env->logs);*/
 			return (1);
 		}
 		env->nb_coders_launched++;

@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:33:18 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/17 10:19:09 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/17 16:48:10 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,7 +137,8 @@ int			validate_args(int argc, char **argv, t_config *config);
 int			*ask_dongles(t_thread_context *ctx);
 int			init_dongle_pool(t_dongle_pool *pool, t_config *config);
 int			init_coders(t_coder **coders, t_config *config);
-int			init_queue(t_scheduler_queue *queue, t_config *config, t_coder *coders);
+int			init_queue(t_scheduler_queue *queue, t_config *config,
+				t_coder *coders);
 int			init_env(t_env *env, int argc, char **argv);
 void		clean_env(t_env *env);
 void		fill_context(t_thread_context *ctx, t_env *env);
