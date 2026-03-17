@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 15:31:42 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/17 12:55:28 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/17 13:02:02 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ int	check_coder_death(t_env *ctx)
 	long long	t;
 
 	i = 0;
-	while (i < ctx->nb_coders_launched)
+	while (i < ctx->config.number_of_coder)
 	{
 		t = now();
 		pthread_mutex_lock(&ctx->coders[i].mutex);
@@ -49,7 +49,7 @@ int	check_end(t_env *ctx)
 	int	i;
 
 	i = 0;
-	while (i < ctx->nb_coders_launched)
+	while (i < ctx->config.number_of_coder)
 	{
 		pthread_mutex_lock(&ctx->coders[i].mutex);
 		if (ctx->coders[i].nbr_compilation
