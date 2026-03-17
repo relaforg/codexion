@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 09:38:50 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/13 09:01:20 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/17 10:21:48 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ int	launch_monitor(t_env *env)
 	return (0);
 }
 
-int	launch_coders(pthread_t *coders, t_env *env)
+int	launch_coders(t_env *env)
 {
 	t_thread_context	*ctx;
 
@@ -31,16 +31,16 @@ int	launch_coders(pthread_t *coders, t_env *env)
 		ctx = malloc(sizeof(t_thread_context));
 		if (!ctx)
 		{
-			send_log(-1, SHUTDOWN, &env->logs);
+			/*send_log(-1, SHUTDOWN, &env->logs);*/
 			return (1);
 		}
-		ctx->id = env->nb_coders_launched + 1;
+		ctx->coder = &env->coders[env->nb_coders_launched];
 		fill_context(ctx, env);
-		if (pthread_create(&coders[env->nb_coders_launched], NULL,
+		if (pthread_create(&env->coders[env->nb_coders_launched].tid, NULL,
 				coder_routine, (void *)ctx))
 		{
 			free(ctx);
-			send_log(-1, SHUTDOWN, &env->logs);
+			/*send_log(-1, SHUTDOWN, &env->logs);*/
 			return (1);
 		}
 		env->nb_coders_launched++;
@@ -48,14 +48,14 @@ int	launch_coders(pthread_t *coders, t_env *env)
 	return (0);
 }
 
-void	join_threads(t_env *env, pthread_t *coders)
+void	join_threads(t_env *env)
 {
 	int	i;
 
 	i = 0;
 	while (i < env->nb_coders_launched)
 	{
-		pthread_join(coders[i], NULL);
+		pthread_join(env->coders[i].tid, NULL);
 		i++;
 	}
 	pthread_join(env->monitor, NULL);
@@ -63,21 +63,14 @@ void	join_threads(t_env *env, pthread_t *coders)
 
 int	run(t_env *env)
 {
-	pthread_t	*coders;
-
-	coders = malloc(sizeof(pthread_t) * env->config.number_of_coder);
-	if (!coders)
-		return (1);
 	if (launch_monitor(env))
-		return (free(coders), 1);
-	if (launch_coders(coders, env))
+		return (1);
+	if (launch_coders(env))
 	{
-		join_threads(env, coders);
-		free(coders);
+		join_threads(env);
 		return (1);
 	}
-	join_threads(env, coders);
-	free(coders);
+	join_threads(env);
 	return (0);
 }
 

@@ -6,14 +6,13 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 15:20:05 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/13 09:11:36 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/17 09:34:49 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 int	init_dongle_pool(t_dongle_pool *pool, t_config *config)
 {
@@ -38,20 +37,47 @@ int	init_dongle_pool(t_dongle_pool *pool, t_config *config)
 	return (0);
 }
 
-int	init_logs(t_log_queue *logs)
+int	init_print(t_print *print)
 {
-	logs->head = 0;
-	logs->tail = 0;
-	logs->count = 0;
-	logs->shutdown = 0;
-	if (pthread_mutex_init(&logs->mutex, NULL))
-		return (1);
-	if (pthread_cond_init(&logs->cond, NULL))
+	if (pthread_mutex_init(&print->mutex, NULL))
 		return (1);
 	return (0);
 }
 
-int	init_queue(t_scheduler_queue *queue, t_config *config)
+int	init_burnout(t_burnout *burnout)
+{
+	burnout->is_burnout = FALSE;
+	if (pthread_mutex_init(&burnout->mutex, NULL))
+		return (1);
+	return (0);
+}
+
+int	init_coders(t_coder **coders, t_config *config)
+{
+	int	i;
+
+	*coders = malloc(sizeof(t_coder) * config->number_of_coder);
+	if (!*coders)
+		return (1);
+	i = 0;
+	while (i < config->number_of_coder)
+	{
+		(*coders)[i].id = i + 1;
+		(*coders)[i].last_compile = 0;
+		(*coders)[i].nbr_compilation = 0;
+		if (pthread_mutex_init(&(*coders)[i].mutex, NULL))
+		{
+			while (--i >= 0)
+				pthread_mutex_destroy(&(*coders)[i].mutex);
+			free(*coders);
+			return (1);
+		}
+		i++;
+	}
+	return (0);
+}
+
+int	init_queue(t_scheduler_queue *queue, t_config *config, t_coder *coders)
 {
 	int	i;
 
@@ -64,11 +90,14 @@ int	init_queue(t_scheduler_queue *queue, t_config *config)
 		return (1);
 	queue->entries = malloc(sizeof(t_queue_entry) * config->number_of_coder);
 	if (!queue->entries)
+	{
+		pthread_mutex_destroy(&queue->mutex);
 		return (1);
+	}
 	i = 0;
 	while (i < config->number_of_coder)
 	{
-		queue->entries[queue->size].coder_id = i + 1;
+		queue->entries[queue->size].coder = &coders[i];
 		queue->entries[queue->size].request_time = now();
 		queue->entries[queue->size].deadline = config->burnout_time;
 		queue->size++;
@@ -79,13 +108,20 @@ int	init_queue(t_scheduler_queue *queue, t_config *config)
 
 void	clean_env(t_env *env)
 {
+	int	i;
+
+	i = 0;
+	while (i < env->config.number_of_coder)
+	{
+		pthread_mutex_destroy(&env->coders[i].mutex);
+		i++;
+	}
+	free(env->coders);
 	pthread_mutex_destroy(&env->pool.mutex);
 	free(env->pool.dongles);
 	pthread_mutex_destroy(&env->queue.mutex);
 	free(env->queue.entries);
-	pthread_mutex_destroy(&env->logs.mutex);
-	pthread_cond_destroy(&env->logs.cond);
-	free(env->coders);
+	pthread_mutex_destroy(&env->print.mutex);
 }
 
 int	init_env(t_env *env, int argc, char **argv)
@@ -95,22 +131,22 @@ int	init_env(t_env *env, int argc, char **argv)
 		printf("Arguments are invalid\n");
 		return (1);
 	}
-	if (init_logs(&env->logs))
+	if (init_print(&env->print))
 		return (1);
-	if (init_queue(&env->queue, &env->config))
+	if (init_burnout(&env->burnout))
 		return (1);
+	if (init_coders(&env->coders, &env->config))
+		return (1);
+	if (init_queue(&env->queue, &env->config, env->coders))
+	{
+		free(env->coders);
+		return (1);
+	}
 	if (init_dongle_pool(&env->pool, &env->config))
 	{
 		free(env->queue.entries);
+		free(env->coders);
 		return (1);
 	}
-	env->coders = malloc(sizeof(t_coder) * env->config.number_of_coder);
-	if (!env->coders)
-	{
-		free(env->queue.entries);
-		free(env->pool.dongles);
-		return (1);
-	}
-	memset(env->coders, 0, sizeof(t_coder) * env->config.number_of_coder);
 	return (0);
 }

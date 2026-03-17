@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 15:31:42 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/13 09:30:56 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/17 10:37:01 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,82 +14,71 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-t_log_entry	dequeue_log(t_log_queue *logs)
+int	check_coder_death(t_env *ctx)
 {
-	t_log_entry	msg;
+	int	i;
+	long long	t;
 
-	pthread_mutex_lock(&logs->mutex);
-	while (logs->count == 0)
-		pthread_cond_wait(&logs->cond, &logs->mutex);
-	msg = logs->entries[logs->head];
-	logs->head = (logs->head + 1) % 1024;
-	logs->count--;
-	pthread_mutex_unlock(&logs->mutex);
-	return (msg);
+	t = now();
+	i = 0;
+	while (i < ctx->nb_coders_launched)
+	{
+		pthread_mutex_lock(&ctx->coders[i].mutex);
+		if (t - ctx->config.start_time - ctx->coders[i].last_compile
+			>= ctx->config.burnout_time && ctx->coders[i].nbr_compilation
+			< ctx->config.number_of_compilation)
+		{
+			pthread_mutex_lock(&ctx->burnout.mutex);
+			ctx->burnout.is_burnout = TRUE;
+			pthread_mutex_unlock(&ctx->burnout.mutex);
+			pthread_mutex_lock(&ctx->print.mutex);
+			printf("%lld %d ", t - ctx->config.start_time, ctx->coders[i].id);
+			printf("burned out\n");
+			pthread_mutex_unlock(&ctx->print.mutex);
+			pthread_mutex_unlock(&ctx->coders[i].mutex);
+			return (1);
+		}
+		pthread_mutex_unlock(&ctx->coders[i].mutex);
+		i++;
+	}
+	return (0);
 }
 
-int	handle_log_entry(t_coder *coders, t_log_entry msg, long long start_time)
-{
-	printf("%lld %d ", msg.timestamp - start_time, msg.coder_id);
-	if (msg.message == DONGLE)
-	{
-		printf("has taken a dongle\n");
-		printf("%lld %d ", msg.timestamp - start_time, msg.coder_id);
-		printf("has taken a dongle\n");
-	}
-	else if (msg.message == COMPILE)
-	{
-		coders[msg.coder_id - 1].last_compile = now() - start_time;
-		printf("is compiling\n");
-	}
-	else if (msg.message == DEBUG)
-		printf("is debugging\n");
-	else if (msg.message == REFACTOR)
-		printf("is refactoring\n");
-	else if (msg.message == BURNOUT)
-	{
-		printf("burned out\n");
-		return (0);
-	}
-	return (1);
-}
-
-void	check_coder_death(t_env *ctx)
+int	check_end(t_env *ctx)
 {
 	int	i;
 
 	i = 0;
 	while (i < ctx->nb_coders_launched)
 	{
-		if (now() - ctx->config.start_time - ctx->coders[i].last_compile
-			>= ctx->config.burnout_time)
-			send_log(i + 1, BURNOUT, &ctx->logs);
+		pthread_mutex_lock(&ctx->coders[i].mutex);
+		if (ctx->coders[i].nbr_compilation
+			< ctx->config.number_of_compilation)
+		{
+			pthread_mutex_unlock(&ctx->coders[i].mutex);
+			return (1);
+		}
+		pthread_mutex_unlock(&ctx->coders[i].mutex);
 		i++;
 	}
+	return (0);
 }
 
 void	*monitor_routine(void *context)
 {
 	t_env				*ctx;
-	int					count;
-	t_log_entry			msg;
 
 	ctx = (t_env *) context;
-	count = 0;
-	while (count < ctx->nb_coders_launched)
+
+	while (1)
 	{
-		check_coder_death(ctx);
-		msg = dequeue_log(&ctx->logs);
-		if (msg.message == DONE)
+		if (check_coder_death(ctx))
+			break ;
+		if (!check_end(ctx))
 		{
-			count++;
-			continue ;
+			printf("\nAll coders are done !\n");
+			break ;
 		}
-		else if (msg.message == SHUTDOWN)
-			return (NULL);
-		if (!handle_log_entry(ctx->coders, msg, ctx->config.start_time))
-			return (NULL);
 	}
-	printf("\nAll coders are done !\n");
 	return (NULL);
 }

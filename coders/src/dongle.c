@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 15:00:24 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/11 14:46:31 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/17 10:23:04 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,8 +33,8 @@ int	*take_dongles(t_thread_context *ctx)
 	int	left;
 	int	right;
 
-	left = ctx->id % ctx->config->number_of_coder;
-	right = (ctx->id + 1) % ctx->config->number_of_coder;
+	left = ctx->coder->id % ctx->config->number_of_coder;
+	right = (ctx->coder->id + 1) % ctx->config->number_of_coder;
 	pthread_mutex_lock(&ctx->pool->mutex);
 	if (!dongles_available(ctx, left, right))
 	{
@@ -52,7 +52,7 @@ int	*take_dongles(t_thread_context *ctx)
 	pthread_mutex_unlock(&ctx->pool->mutex);
 	dongles[0] = left;
 	dongles[1] = right;
-	send_log(ctx->id, DONGLE, ctx->logs);
+	print(ctx, DONGLE);
 	return (dongles);
 }
 
@@ -90,21 +90,23 @@ t_bool	neighbor_can_compile(t_thread_context *ctx, int neighbor_id)
 	return (result);
 }
 
-int	*ask_dongles(t_thread_context *ctx, long long last_compile)
+int	*ask_dongles(t_thread_context *ctx)
 {
 	int		i;
 	int		neighbor_id;
 	int		*dongles;
 
-	(void) last_compile;
+	if (ctx->config->number_of_coder < 2)
+		return (NULL);
 	pthread_mutex_lock(&ctx->queue->mutex);
 	i = 0;
-	while (i < ctx->queue->size && ctx->queue->entries[i].coder_id != ctx->id)
+	while (i < ctx->queue->size && ctx->queue->entries[i].coder->id
+		!= ctx->coder->id)
 	{
-		neighbor_id = ctx->queue->entries[i].coder_id;
-		if ((neighbor_id == ((ctx->id - 2 + ctx->config->number_of_coder)
+		neighbor_id = ctx->queue->entries[i].coder->id;
+		if ((neighbor_id == ((ctx->coder->id - 2 + ctx->config->number_of_coder)
 					% ctx->config->number_of_coder) + 1
-				|| neighbor_id == (ctx->id
+				|| neighbor_id == (ctx->coder->id
 					% ctx->config->number_of_coder) + 1)
 			&& neighbor_can_compile(ctx, neighbor_id))
 		{
