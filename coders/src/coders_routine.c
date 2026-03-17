@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/07 10:34:27 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/17 10:32:09 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/17 12:43:16 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,8 +55,8 @@ void	print(t_thread_context *ctx, t_message_type type)
 void	constant_coder_routine(t_thread_context *ctx, int *dongles)
 {
 	ctx->coder->last_compile = now() - ctx->config->start_time;
-	update_queue(ctx);
 	compile(ctx);
+	update_queue(ctx);
 	free_dongles(ctx, dongles);
 	debug(ctx);
 	refactor(ctx);

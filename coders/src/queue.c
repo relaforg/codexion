@@ -6,7 +6,7 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/11 11:16:48 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/17 10:17:43 by relaforg         ###   ########.fr       */
+/*   Updated: 2026/03/17 11:28:55 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ void	update_queue(t_thread_context *ctx)
 	{
 		if (ctx->queue->entries[i].coder->id == ctx->coder->id)
 		{
-			ctx->queue->entries[i].deadline = ctx->coder->last_compile
+			ctx->queue->entries[i].deadline = (now() - ctx->config->start_time)
 				+ ctx->config->burnout_time;
 			ctx->queue->entries[i].request_time = now();
 			break ;
